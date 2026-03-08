@@ -6,18 +6,27 @@ from flask_cors import CORS
 import firebase_admin
 from firebase_admin import credentials, db
 import datetime
+import os
 
 app = Flask(__name__)
-CORS(app) # Crucial for allowing your app to talk to the server
+CORS(app) # Crucial for allowing your mobile app to talk to the server
 
 # --- CONFIGURATION ---
 SENDER_EMAIL = "delstarfordisaiah@gmail.com"
-# Note: Google app passwords should not have spaces when used in code
 APP_PASSWORD = "dpxluxnrjzogozdu" 
 
-# Assuming you already initialized Firebase Admin somewhere up here:
-# cred = credentials.Certificate("path/to/serviceAccountKey.json")
-# firebase_admin.initialize_app(cred, {'databaseURL': 'YOUR_FIREBASE_URL'})
+# --- FIREBASE INITIALIZATION ---
+# This connects your Python server to your Firebase Database safely.
+try:
+    # Check if already initialized to avoid errors during Render server reboots
+    firebase_admin.get_app()
+except ValueError:
+    # IMPORTANT: Ensure your 'serviceAccountKey.json' file is in the same folder!
+    # IMPORTANT: Replace the databaseURL below with your actual Firebase Realtime Database URL!
+    cred = credentials.Certificate("serviceAccountKey.json")
+    firebase_admin.initialize_app(cred, {
+        'databaseURL': 'https://your-project-id-default-rtdb.firebaseio.com/' # <--- PASTE YOUR REAL URL HERE
+    })
 
 def send_email_html(target_email, subject, html_content):
     """Helper function to send HTML emails using your Gmail account."""
@@ -66,7 +75,7 @@ def submit_insurance():
         })
 
         # 2. Determine Target Email
-        # For testing, you can put your own email here to see how it looks!
+        # For testing, we fallback to your own email if the provider email fails
         provider_emails = {
             'Pula Agricultural Insurance': 'partners@pula-advisors.com',
             'Kilimo Trust Credit': 'credit@kilimotrust.org',
@@ -105,4 +114,6 @@ def submit_insurance():
         return jsonify({"success": False, "message": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # Render assigns a dynamic port, so we must use os.environ.get
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
