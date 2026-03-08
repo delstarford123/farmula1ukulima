@@ -1,3 +1,4 @@
+import os
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -6,7 +7,6 @@ from flask_cors import CORS
 import firebase_admin
 from firebase_admin import credentials, db
 import datetime
-import os
 
 app = Flask(__name__)
 CORS(app) # Crucial for allowing your mobile app to talk to the server
@@ -16,16 +16,20 @@ SENDER_EMAIL = "delstarfordisaiah@gmail.com"
 APP_PASSWORD = "dpxluxnrjzogozdu" 
 
 # --- FIREBASE INITIALIZATION ---
-# This connects your Python server to your Firebase Database safely.
 try:
     # Check if already initialized to avoid errors during Render server reboots
     firebase_admin.get_app()
 except ValueError:
-    # IMPORTANT: Ensure your 'serviceAccountKey.json' file is in the same folder!
-    # IMPORTANT: Replace the databaseURL below with your actual Firebase Realtime Database URL!
-    cred = credentials.Certificate("serviceAccountKey.json")
+    # Check if we are running on Render's secure server
+    if os.path.exists('/etc/secrets/serviceAccountKey.json'):
+        cred = credentials.Certificate('/etc/secrets/serviceAccountKey.json')
+    else:
+        # Fallback for when you are testing on your local computer
+        cred = credentials.Certificate('serviceAccountKey.json')
+        
     firebase_admin.initialize_app(cred, {
-        'databaseURL': 'https://your-project-id-default-rtdb.firebaseio.com/' # <--- PASTE YOUR REAL URL HERE
+        # ⚠️ IMPORTANT: Replace this URL with your actual Firebase Realtime Database URL!
+        'databaseURL': 'https://your-project-id-default-rtdb.firebaseio.com/' 
     })
 
 def send_email_html(target_email, subject, html_content):
