@@ -29,7 +29,7 @@ except ValueError:
         
     firebase_admin.initialize_app(cred, {
         # ⚠️ IMPORTANT: Replace this URL with your actual Firebase Realtime Database URL!
-        'databaseURL': 'https://your-project-id-default-rtdb.firebaseio.com/' 
+        'databaseURL': 'https://farmula-1-ce3a4-default-rtdb.firebaseio.com/' 
     })
 
 def send_email_html(target_email, subject, html_content):
